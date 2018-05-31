@@ -1,8 +1,25 @@
-language: java
-script: ./gradlew build jacocoTestReport
-jdk: oraclejdk7
-env:
-  matrix:
-  - TERM=dumb
-after_success:
-- ./gradlew jacocoRootReport coveralls
+language: android
+jdk: oraclejdk8
+
+notifications:
+  email: false
+
+android:
+  components:
+    - tools
+    - build-tools-27.0.3
+    - android-27
+    - extra-android-support
+    - extra-android-m2repository
+  licenses:
+      - 'android-sdk-preview-license-.+'
+      - 'android-sdk-license-.+'
+      - 'google-gdk-license-.+'
+
+before_install:
+  - chmod +x gradlew
+  - yes | sdkmanager "platforms;android-27"
+
+script: ./gradlew clean assemble test
+
+after_success: ./gradlew jacocoRootReport coveralls
