@@ -1,7 +1,7 @@
 buildscript {
     def versionMajor = 1
     def versionMinor = 0
-    def versionPatch = 7
+    def versionPatch = 1
 
     ext.versions = [
             'versionCode'        : versionMajor * 10000 + versionMinor * 100 + versionPatch,
@@ -30,9 +30,9 @@ buildscript {
             bintrayName     : 'dummy',
             publishedGroupId: 'nusabit.org',
 
-            siteUrl         : 'https://github.com/d4rken/RxShell',
-            issuesUrl       : 'https://github.com/d4rken/RxShell/issues',
-            gitUrl          : 'https://github.com/d4rken/RxShell.git',
+            siteUrl         : 'https://github.com/baksosapi/multimodule',
+            issuesUrl       : 'https://github.com/baksosapi/multimodule/issues',
+            gitUrl          : 'https://github.com/baksosapi/multimodule.git',
 
             libraryVersion  : versions.versionName,
 
