@@ -86,7 +86,7 @@ allprojects {
 }
 
 subprojects { subProject ->
-    def exclude = ['eu/darken/R*.class', '**/BuildConfig.class', '**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*']
+    def exclude = ['org/nusabit/R*.class', '**/BuildConfig.class', '**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*']
     task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
         reports {
             xml.enabled = true
