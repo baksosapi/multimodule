@@ -1,4 +1,5 @@
 # multimodule
-[![Coverage Status](https://coveralls.io/repos/github/baksosapi/multimodule/badge.svg?branch=master)](https://coveralls.io/github/baksosapi/multimodule?branch=master)
+
+[![Build Status](https://travis-ci.org/baksosapi/multimodule.svg?branch=master)](https://travis-ci.org/baksosapi/multimodule)
 
 Test Multi App coverage
