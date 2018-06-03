@@ -15,36 +15,6 @@ buildscript {
             'buildTools'         : '27.0.3'
     ]
 
-    def credentialsFile = new File(System.properties['user.home'], ".bintray/bintray.properties")
-    if (credentialsFile.canRead()) {
-        Properties props = new Properties()
-        props.load(new FileInputStream(credentialsFile))
-        ext.bintrayCredentials = [
-                bintrayUser  : props['bintray.user'],
-                bintrayApiKey: props['bintray.apikey']
-        ]
-    }
-
-    ext.bintrayConfig = [
-            bintrayRepo     : 'maven',
-            bintrayName     : 'dummy',
-            publishedGroupId: 'nusabit.org',
-
-            siteUrl         : 'https://github.com/baksosapi/multimodule',
-            issuesUrl       : 'https://github.com/baksosapi/multimodule/issues',
-            gitUrl          : 'https://github.com/baksosapi/multimodule.git',
-
-            libraryVersion  : versions.versionName,
-
-            developerId     : 'abi',
-            developerName   : 'Abi',
-            developerEmail  : 'wildan.dev2gmail.com',
-
-            licenseName     : 'Apache-2.0',
-            licenseUrl      : 'https://github.com/baksosapi/AppDemo/blob/master/LICENSE',
-            allLicenses     : ["Apache-2.0"]
-    ]
-
     ext.deps = [
             'support'    : [
                     'annotations': "com.android.support:support-annotations:${versions.supportLibrary}",
