@@ -1,8 +1,6 @@
-package org.nusabit.multimodule;
+package org.nusabit.bidan;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import org.nusabit.appsatu.MainActivity;
 
 import static org.junit.Assert.*;
 
@@ -23,6 +21,13 @@ public class MainActivityTest {
     {
         MainActivity bar = new MainActivity();
         assertEquals("bar called", bar.bar());
+    }
+
+    @Test
+    public  void foobar()
+    {
+        MainActivity main = new MainActivity();
+        assertEquals("foo bar called", main.fooBar());
     }
 
 }

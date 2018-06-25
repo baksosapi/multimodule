@@ -1,3 +1,4 @@
 rootProject.name = 'multimodule'
 include ':bidan'
 include ':vaksin'
+include ':gizi'

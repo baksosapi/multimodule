@@ -1,9 +1,9 @@
-package org.nusabit.appsatu;
+package org.nusabit.gizi;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import org.nusabit.multimodule.R;
+import org.nusabit.vaksin.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -13,8 +13,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
-    public  String bar()
+    public  String foo()
     {
-        return "bar called";
+        return "foo called";
     }
 }

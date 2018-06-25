@@ -1,6 +1,7 @@
-package org.nusabit.appdua;
+package org.nusabit.gizi;
 
 import org.junit.Test;
+import org.nusabit.gizi.MainActivity;
 
 import static org.junit.Assert.*;
 

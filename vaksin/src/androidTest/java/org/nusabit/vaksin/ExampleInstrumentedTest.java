@@ -1,4 +1,4 @@
-package org.nusabit.multimodule;
+package org.nusabit.vaksin;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("org.nusabit.multimodule", appContext.getPackageName());
+        assertEquals("org.nusabit.appdua", appContext.getPackageName());
     }
 }

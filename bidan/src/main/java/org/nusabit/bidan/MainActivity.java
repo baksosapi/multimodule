@@ -1,4 +1,4 @@
-package org.nusabit.appdua;
+package org.nusabit.bidan;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,8 +11,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
-    public  String foo()
+    public  String bar()
     {
-        return "foo called";
+        return "bar called";
+    }
+    public  String fooBar()
+    {
+        return "foo bar called";
     }
 }
