@@ -1,7 +1,6 @@
 package org.smartregister.bidan.activity;
 
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -28,12 +27,8 @@ import java.util.Date;
 
 import static org.smartregister.bidan.constant.BidanConstants.INTENT_KEY.LAST_SYNC_TIME_STRING;
 
-/**
- * Created by ndegwamartin on 09/10/2017.
- */
-
-public class HomeActivity extends BaseActivity {
-    private static final String TAG = HomeActivity.class.getCanonicalName();
+public class BidanHomeActivity extends BaseActivity {
+    private static final String TAG = BidanHomeActivity.class.getCanonicalName();
     private View refreshButton;
 
     @Override
@@ -42,10 +37,11 @@ public class HomeActivity extends BaseActivity {
         setContentView(R.layout.activity_home);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setLogo(R.drawable.round_white_background);
-        getSupportActionBar().setDisplayUseLogoEnabled(false);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setLogo(R.drawable.round_white_background);
+            getSupportActionBar().setDisplayUseLogoEnabled(false);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
         if (savedInstanceState == null) {
             processView();
 
@@ -59,7 +55,7 @@ public class HomeActivity extends BaseActivity {
     }
 
     private void populateLastSync(TextView textView) {
-        textView.setText("Last sync: " + Utils.formatDate(new Date(ECSyncHelper.getInstance(this).getLastCheckTimeStamp()), "MMM dd HH:mm"));
+        textView.setText(String.format("Last sync: %s", Utils.formatDate(new Date(ECSyncHelper.getInstance(this).getLastCheckTimeStamp()), "MMM dd HH:mm")));
     }
 
     //
@@ -68,10 +64,8 @@ public class HomeActivity extends BaseActivity {
         TriggerSyncEvent viewConfigurationSyncEvent = new TriggerSyncEvent();
         viewConfigurationSyncEvent.setManualSync(true);
         postEvent(viewConfigurationSyncEvent);
-        if (view != null) {
-            TextView textView = view.getRootView().findViewById(R.id.registerLastSyncTime);
-            populateLastSync(textView);
-        }
+        TextView textView = view.getRootView().findViewById(R.id.registerLastSyncTime);
+        populateLastSync(textView);
     }
 
     public void postEvent(BaseEvent event) {
@@ -98,7 +92,7 @@ public class HomeActivity extends BaseActivity {
         refreshButton = findViewById(R.id.refreshSyncButton); //assign RefreshButton
 
         //set user initials
-        if (fullName != null && !fullName.toString().isEmpty()) {
+        if (fullName != null && !fullName.isEmpty()) {
             TextView textView = toolbar.findViewById(R.id.custom_toolbar_logo_text);
             textView.setText(Utils.getShortInitials(fullName));
         }
@@ -107,7 +101,7 @@ public class HomeActivity extends BaseActivity {
         TextView lastSyncTimeTextView = findViewById(R.id.registerLastSyncTime);
         if (lastSyncTimeTextView != null) {
             String defaultLastSyncTime = Utils.formatDate(Calendar.getInstance().getTime(), "MMM dd HH:mm");
-            lastSyncTimeTextView.setText("Last sync: " + Utils.readPrefString(this, LAST_SYNC_TIME_STRING, defaultLastSyncTime));
+            lastSyncTimeTextView.setText(String.format("Last sync: %s", Utils.readPrefString(this, LAST_SYNC_TIME_STRING, defaultLastSyncTime)));
         }
 
         //Set App Name

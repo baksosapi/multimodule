@@ -21,7 +21,7 @@ import org.smartregister.configurableviews.model.ViewConfiguration;
 import org.smartregister.domain.FetchStatus;
 import org.smartregister.bidan.R;
 import org.smartregister.bidan.activity.BasePatientDetailActivity;
-import org.smartregister.bidan.activity.HomeActivity;
+import org.smartregister.bidan.activity.BidanHomeActivity;
 import org.smartregister.bidan.activity.InTreatmentPatientRegisterActivity;
 import org.smartregister.bidan.activity.PositivePatientRegisterActivity;
 import org.smartregister.bidan.event.EnketoFormSaveCompleteEvent;
@@ -195,7 +195,7 @@ public abstract class BasePatientDetailsFragment extends SecuredFragment impleme
                 initializeRegister(new Intent(getActivity(), InTreatmentPatientRegisterActivity.class), getTranslatedToken(Register.IN_TREATMENT_PATIENTS, getString(R.string.in_treatment_patients)));
 
             } else if (enketoFormSaveCompleteEvent.getFormName().equals(org.smartregister.bidan.constant.BidanConstants.FORM.REMOVE_PATIENT) || enketoFormSaveCompleteEvent.getFormName().equals(org.smartregister.bidan.constant.BidanConstants.FORM.TREATMENT_OUTCOME)) {
-                startActivity(new Intent(getActivity(), HomeActivity.class));
+                startActivity(new Intent(getActivity(), BidanHomeActivity.class));
             } else {
                 processViewConfigurations(getView());
             }

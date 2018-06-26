@@ -29,6 +29,7 @@ public class InTreatmentPatientDetailsFragment extends BasePatientDetailsFragmen
         View rootView = inflater.inflate(R.layout.activity_intreatment_patient_detail, container, false);
         Toolbar toolbar = rootView.findViewById(R.id.toolbar);
         AppCompatActivity activity = ((AppCompatActivity) getActivity());
+
         activity.setSupportActionBar(toolbar);
         activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         activity.getSupportActionBar().setTitle(activity.getIntent().getStringExtra(REGISTER_TITLE));

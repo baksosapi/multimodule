@@ -19,6 +19,7 @@ import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,6 +47,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.smartregister.Context;
 import org.smartregister.bidan.application.BidanApplication;
+import org.smartregister.bidan.constant.BidanConstants;
 import org.smartregister.configurableviews.ConfigurableViewsLibrary;
 import org.smartregister.configurableviews.model.LoginConfiguration;
 import org.smartregister.configurableviews.model.ViewConfiguration;
@@ -71,15 +73,15 @@ import util.ImageLoaderRequest;
 
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 import static android.view.inputmethod.InputMethodManager.HIDE_NOT_ALWAYS;
+import static org.smartregister.bidan.constant.BidanConstants.CONFIGURATION.LOGIN;
+import static org.smartregister.bidan.constant.BidanConstants.VIEW_CONFIGURATION_PREFIX;
 import static org.smartregister.domain.LoginResponse.NO_INTERNET_CONNECTIVITY;
 import static org.smartregister.domain.LoginResponse.SUCCESS;
 import static org.smartregister.domain.LoginResponse.UNAUTHORIZED;
 import static org.smartregister.domain.LoginResponse.UNKNOWN_RESPONSE;
-import static org.smartregister.bidan.constant.BidanConstants.CONFIGURATION.LOGIN;
 import static org.smartregister.util.Log.logError;
 import static org.smartregister.util.Log.logInfo;
 import static org.smartregister.util.Log.logVerbose;
-import static org.smartregister.bidan.constant.BidanConstants.VIEW_CONFIGURATION_PREFIX;
 
 /**
  * Created on 09/10/2017 by SGithengi
@@ -110,25 +112,21 @@ public class LoginActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         logVerbose("Initializing ...");
-        try {
-            AllSharedPreferences allSharedPreferences = new AllSharedPreferences(getDefaultSharedPreferences(this));
-            String preferredLocale = allSharedPreferences.fetchLanguagePreference();
-            Resources res = getOpenSRPContext().applicationContext().getResources();
-            // Change locale settings in the app.
-            DisplayMetrics dm = res.getDisplayMetrics();
-            Configuration conf = res.getConfiguration();
-            conf.locale = new Locale(preferredLocale);
-            res.updateConfiguration(conf, dm);
-        } catch (Exception e) {
-            logError("Error onCreate: " + e);
-
-        }
+        AllSharedPreferences allSharedPreferences = new AllSharedPreferences(getDefaultSharedPreferences(this));
+        String preferredLocale = allSharedPreferences.fetchLanguagePreference();
+        Resources res = getOpenSRPContext().applicationContext().getResources();
+        // Change locale settings in the app.
+        DisplayMetrics dm = res.getDisplayMetrics();
+        Configuration conf = res.getConfiguration();
+        conf.locale = new Locale(preferredLocale);
+        res.updateConfiguration(conf, dm);
 
         setContentView(R.layout.login);
 
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(android.R.color.black)));
-
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(android.R.color.black)));
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(getResources().getColor(android.R.color.black));
         }
@@ -136,6 +134,7 @@ public class LoginActivity extends AppCompatActivity {
         positionViews();
         initializeLoginFields();
         initializeBuildDetails();
+
         setDoneActionHandlerOnPasswordField();
         setListenerOnShowPasswordCheckbox();
         initializeProgressDialog();
@@ -163,7 +162,7 @@ public class LoginActivity extends AppCompatActivity {
     private void initializeBuildDetails() {
         TextView buildDetailsTextView = findViewById(org.smartregister.R.id.login_build);
         try {
-            buildDetailsTextView.setText("Version " + getVersion() + ", Built on: " + getBuildDate());
+            buildDetailsTextView.setText(String.format("Version %s, Built on: %s", getVersion(), getBuildDate()));
         } catch (Exception e) {
             logError("Error fetching build details: " + e);
         }
@@ -264,7 +263,7 @@ public class LoginActivity extends AppCompatActivity {
     private void localLogin(View view, String userName, String password) {
         view.setClickable(true);
         if (getOpenSRPContext().userService().isUserInValidGroup(userName, password)
-                && (!org.smartregister.bidan.constant.BidanConstants.TIME_CHECK || TimeStatus.OK.equals(getOpenSRPContext().userService().validateStoredServerTimeZone()))) {
+                && (!BidanConstants.TIME_CHECK || TimeStatus.OK.equals(getOpenSRPContext().userService().validateStoredServerTimeZone()))) {
             localLoginWith(userName, password);
         } else {
 
@@ -281,16 +280,14 @@ public class LoginActivity extends AppCompatActivity {
                     view.setClickable(true);
                     if (loginResponse == SUCCESS) {
                         if (getOpenSRPContext().userService().isUserInPioneerGroup(userName)) {
-                            TimeStatus timeStatus = getOpenSRPContext().userService().validateDeviceTime(
-                                    loginResponse.payload(), org.smartregister.bidan.constant.BidanConstants.MAX_SERVER_TIME_DIFFERENCE);
-                            if (!org.smartregister.bidan.constant.BidanConstants.TIME_CHECK || timeStatus.equals(TimeStatus.OK)) {
+                            TimeStatus timeStatus = getOpenSRPContext().userService().validateDeviceTime(loginResponse.payload(), BidanConstants.MAX_SERVER_TIME_DIFFERENCE);
+                            if (!BidanConstants.TIME_CHECK || timeStatus.equals(TimeStatus.OK)) {
                                 remoteLoginWith(userName, password, loginResponse.payload());
                                 /*Intent intent = new Intent(appContext, PullUniqueIdsIntentService.class);
                                 appContext.startService(intent);*/
                             } else {
                                 if (timeStatus.equals(TimeStatus.TIMEZONE_MISMATCH)) {
-                                    TimeZone serverTimeZone = getOpenSRPContext().userService()
-                                            .getServerTimeZone(loginResponse.payload());
+                                    TimeZone serverTimeZone = getOpenSRPContext().userService().getServerTimeZone(loginResponse.payload());
                                     showErrorDialog(getString(timeStatus.getMessage(),
                                             serverTimeZone.getDisplayName()));
                                 } else {
@@ -382,8 +379,8 @@ public class LoginActivity extends AppCompatActivity {
             Utils.startAsyncTask(new SaveTeamLocationsTask(), null);
         }
 
-        Intent intent = new Intent(this, HomeActivity.class);
-        intent.putExtra(org.smartregister.bidan.constant.BidanConstants.INTENT_KEY.IS_REMOTE_LOGIN, remote);
+        Intent intent = new Intent(this, BidanHomeActivity.class);
+        intent.putExtra(BidanConstants.INTENT_KEY.IS_REMOTE_LOGIN, remote);
         startActivity(intent);
         finish();
     }
@@ -490,7 +487,9 @@ public class LoginActivity extends AppCompatActivity {
     private void processViewCustomizations() {
         try {
             String jsonString = Utils.getPreference(this, VIEW_CONFIGURATION_PREFIX + LOGIN, null);
+            Log.e(TAG, "processViewCustomizations: jsonString "+ jsonString );
             if (jsonString == null) return;
+
             ViewConfiguration loginView = ConfigurableViewsLibrary.getJsonSpecHelper().getConfigurableView(jsonString);
             LoginConfiguration metadata = (LoginConfiguration) loginView.getMetadata();
             LoginConfiguration.Background background = metadata.getBackground();
@@ -509,11 +508,13 @@ public class LoginActivity extends AppCompatActivity {
                         Color.parseColor(background.getEndColor())});
                 canvasRL.setBackground(gradientDrawable);
             }
+            Log.e(TAG, "processViewCustomizations: metadata "+ metadata.getLogoUrl() );
             if (metadata.getLogoUrl() != null) {
                 ImageView imageView = findViewById(R.id.logoImage);
                 ImageLoaderRequest.getInstance(this.getApplicationContext()).getImageLoader()
                         .get(metadata.getLogoUrl(), ImageLoader.getImageListener(imageView,
-                                R.drawable.ic_logo, R.drawable.ic_logo)).getBitmap();
+                                R.drawable.ic_logo_bidan, R.drawable.ic_logo)).getBitmap();
+
                 TextView loginBuild = findViewById(R.id.login_build);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(loginBuild.getLayoutParams());
                 lp.setMargins(0, 0, 0, 0);
@@ -521,13 +522,10 @@ public class LoginActivity extends AppCompatActivity {
             }
 
         } catch (Exception e) {
-            android.util.Log.d(TAG, e.getMessage());
+            Log.e(TAG, "processViewCustomizations: "+ e.getMessage() );
         }
     }
 
-    ////////////////////////////////////////////////////////////////
-// Inner classes
-////////////////////////////////////////////////////////////////
     private class RemoteLoginTask extends AsyncTask<Void, Void, LoginResponse> {
         private final String userName;
         private final String password;

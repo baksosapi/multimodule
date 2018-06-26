@@ -155,9 +155,13 @@ public abstract class BaseRegisterFragment extends SecuredNativeSmartRegisterCur
         View view = inflater.inflate(R.layout.register_activity, container, false);
         Toolbar toolbar = view.findViewById(R.id.register_toolbar);
         AppCompatActivity activity = ((AppCompatActivity) getActivity());
-        activity.setSupportActionBar(toolbar);
-        activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        activity.getSupportActionBar().setTitle(activity.getIntent().getStringExtra(TOOLBAR_TITLE));
+        if (activity.getSupportActionBar() != null) {
+
+            activity.setSupportActionBar(toolbar);
+            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            activity.getSupportActionBar().setTitle(activity.getIntent().getStringExtra(TOOLBAR_TITLE));
+        }
+
         viewConfigurationIdentifier = ((BaseRegisterActivity) getActivity()).getViewIdentifiers().get(0);
         setupViews(view);
         return view;

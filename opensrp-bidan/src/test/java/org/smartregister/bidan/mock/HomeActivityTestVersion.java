@@ -2,13 +2,13 @@ package org.smartregister.bidan.mock;
 
 import android.os.Bundle;
 
-import org.smartregister.bidan.activity.HomeActivity;
+import org.smartregister.bidan.activity.BidanHomeActivity;
 
 /**
  * Created by ndegwamartin on 13/11/2017.
  */
 
-public class HomeActivityTestVersion extends HomeActivity {
+public class HomeActivityTestVersion extends BidanHomeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
