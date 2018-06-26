@@ -17,4 +17,11 @@ public class MainActivityTest {
         MainActivity foo = new MainActivity();
         assertEquals("foo called", foo.foo());
     }
+
+    @Test
+    public  void bar()
+    {
+        MainActivity main = new MainActivity();
+        assertEquals("bar called", main.bar());
+    }
 }

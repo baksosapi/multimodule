@@ -17,4 +17,8 @@ public class MainActivity extends AppCompatActivity {
     {
         return "foo called";
     }
+    public  String bar()
+    {
+        return "bar called";
+    }
 }
