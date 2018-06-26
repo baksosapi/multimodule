@@ -1,6 +1,5 @@
 package org.smartregister.bidan.service;
 
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,23 +8,27 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Process;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 
 import org.apache.commons.lang3.StringUtils;
-import org.greenrobot.eventbus.EventBus;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.smartregister.AllConstants;
+import org.smartregister.bidan.R;
+import org.smartregister.bidan.activity.LoginActivity;
 import org.smartregister.bidan.application.BidanApplication;
+import org.smartregister.bidan.receiver.SyncStatusBroadcastReceiver;
+import org.smartregister.bidan.sync.BidanClientProcessor;
+import org.smartregister.bidan.sync.ECSyncUpdater;
 import org.smartregister.domain.FetchStatus;
 import org.smartregister.domain.Response;
-import org.smartregister.repository.AllSharedPreferences;
 import org.smartregister.repository.EventClientRepository;
 import org.smartregister.service.HTTPAgent;
-import org.smartregister.bidan.R;
-import org.smartregister.bidan.event.SyncEvent;
-import org.smartregister.bidan.sync.ECSyncHelper;
-import org.smartregister.bidan.sync.BidanClientProcessor;
+import org.smartregister.sync.ClientProcessor;
+import org.smartregister.util.Utils;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -40,43 +43,34 @@ import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import util.NetworkUtils;
+import utils.NetworkUtils;
 
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static org.smartregister.bidan.BuildConfig.SYNC_TYPE;
-import static org.smartregister.util.Log.logInfo;
+/**
+ * Created by sid-tech on 5/22/18
+ */
 
 public class SyncService extends Service {
-
-    private static final Object EVENTS_SYNC_PATH = "/rest/event/add";
-    private static final int EVENT_PUSH_LIMIT = 25;
-    public static final int EVENT_PULL_LIMIT = 25;
-    private volatile HandlerThread mHandlerThread;
-    private ServiceHandler mServiceHandler;
+    private static final String TAG = SyncService.class.getName();
+    public static final int EVENT_PULL_LIMIT = 100;
+    private static final String EVENTS_SYNC_PATH = "/rest/event/add";
+    private static final int EVENT_PUSH_LIMIT = 50;
     private Context context;
     private HTTPAgent httpAgent;
+    private volatile HandlerThread mHandlerThread;
+    private ServiceHandler mServiceHandler;
     private List<Observable<?>> observables;
-    private boolean fetchFinished;
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mHandlerThread = new HandlerThread("SyncService.HandlerThread", THREAD_PRIORITY_BACKGROUND);
+        mHandlerThread = new HandlerThread("SyncService.HandlerThread", Process.THREAD_PRIORITY_BACKGROUND);
         mHandlerThread.start();
 
         mServiceHandler = new ServiceHandler(mHandlerThread.getLooper());
 
         context = getBaseContext();
-        httpAgent = BidanApplication.getInstance().getContext().getHttpAgent();
-
+        httpAgent = BidanApplication.getInstance().context().getHttpAgent();
     }
-
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -87,17 +81,28 @@ public class SyncService extends Service {
         return START_NOT_STICKY;
     }
 
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
     @Override
     public void onDestroy() {
         mHandlerThread.quit();
     }
 
-    private void handleSync() {
-        if (BidanApplication.getInstance().getContext().IsUserLoggedOut()) {
-            logInfo("Not updating from server as user is not logged in.");
+    protected void handleSync() {
+        sendSyncStatusBroadcastMessage(FetchStatus.fetchStarted);
+        if (BidanApplication.getInstance().context().IsUserLoggedOut()) {
+            drishtiLogInfo("Not updating from server as user is not logged in.");
             return;
         }
-        sendSyncStatusBroadcastMessage(FetchStatus.fetchStarted);
+
+        doSync();
+    }
+
+    private void doSync() {
         if (!NetworkUtils.isNetworkAvailable()) {
             sendSyncStatusBroadcastMessage(FetchStatus.noConnection, true);
             return;
@@ -111,11 +116,10 @@ public class SyncService extends Service {
             Log.e(getClass().getName(), "", e);
             sendSyncStatusBroadcastMessage(FetchStatus.fetchedFailed, true);
         }
-
     }
 
     private void pushECToServer() {
-        EventClientRepository db = BidanApplication.getInstance().getEventClientRepository();
+        EventClientRepository db = BidanApplication.getInstance().eventClientRepository();
         boolean keepSyncing = true;
 
         while (keepSyncing) {
@@ -126,7 +130,7 @@ public class SyncService extends Service {
                     return;
                 }
 
-                String baseUrl = BidanApplication.getInstance().getContext().configuration().dristhiBaseURL();
+                String baseUrl = BidanApplication.getInstance().context().configuration().dristhiBaseURL();
                 if (baseUrl.endsWith(context.getString(R.string.url_separator))) {
                     baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf(context.getString(R.string.url_separator)));
                 }
@@ -138,12 +142,12 @@ public class SyncService extends Service {
                 if (pendingEvents.containsKey(context.getString(R.string.events_key))) {
                     request.put(context.getString(R.string.events_key), pendingEvents.get(context.getString(R.string.events_key)));
                 }
+
                 String jsonPayload = request.toString();
+                Log.e(TAG, "pushECToServer: "+ jsonPayload );
                 Response<String> response = httpAgent.post(
-                        MessageFormat.format("{0}/{1}",
-                                baseUrl,
-                                EVENTS_SYNC_PATH),
-                        jsonPayload);
+                        MessageFormat.format("{0}/{1}", baseUrl, EVENTS_SYNC_PATH), jsonPayload);
+
                 if (response.isFailure()) {
                     Log.e(getClass().getName(), "Events sync failed.");
                     return;
@@ -154,27 +158,28 @@ public class SyncService extends Service {
                 Log.e(getClass().getName(), e.getMessage());
             }
         }
+
     }
 
     private void pullECFromServer() {
-        final ECSyncHelper ecSyncHelper = ECSyncHelper.getInstance(context);
+        Log.e(TAG, "pullECFromServer: start" );
+        final ECSyncUpdater ecUpdater = ECSyncUpdater.getInstance(context);
 
-        // Fetch team
-        AllSharedPreferences sharedPreferences = BidanApplication.getInstance().getContext().userService().getAllSharedPreferences();
-        String teamId = sharedPreferences.fetchDefaultTeamId(sharedPreferences.fetchRegisteredANM());
-        if (StringUtils.isBlank(teamId)) {
+        // Fetch locations
+        String locations = Utils.getPreference(context, LoginActivity.PREF_TEAM_LOCATIONS, "");
+        if (StringUtils.isBlank(locations)) {
             sendSyncStatusBroadcastMessage(FetchStatus.fetchedFailed, true);
             return;
         }
 
-        Observable.just(teamId)
+        Observable.just(locations)
                 .observeOn(AndroidSchedulers.from(mHandlerThread.getLooper()))
-                .subscribeOn(Schedulers.computation())
+                .subscribeOn(Schedulers.io())
                 .flatMap(new Function<String, ObservableSource<?>>() {
                     @Override
-                    public ObservableSource<?> apply(@NonNull String teamId) throws Exception {
+                    public ObservableSource<?> apply(@NonNull String locations) throws Exception {
 
-                        JSONObject jsonObject = fetchRetry(teamId, 0);
+                        JSONObject jsonObject = fetchRetry(locations, 0);
                         if (jsonObject == null) {
                             return Observable.just(FetchStatus.fetchedFailed);
                         } else {
@@ -185,13 +190,13 @@ public class SyncService extends Service {
                             } else if (eCount == 0) {
                                 return Observable.just(FetchStatus.nothingFetched);
                             } else {
-                                Pair<Long, Long> serverVersionPair = ecSyncHelper.getMinMaxServerVersions(jsonObject);
+                                Pair<Long, Long> serverVersionPair = getMinMaxServerVersions(jsonObject);
                                 long lastServerVersion = serverVersionPair.second - 1;
                                 if (eCount < EVENT_PULL_LIMIT) {
                                     lastServerVersion = serverVersionPair.second;
                                 }
 
-                                ecSyncHelper.updateLastSyncTimeStamp(lastServerVersion);
+                                ecUpdater.updateLastSyncTimeStamp(lastServerVersion);
                                 return Observable.just(new ResponseParcel(jsonObject, serverVersionPair));
                             }
                         }
@@ -200,18 +205,29 @@ public class SyncService extends Service {
                 .subscribe(new Consumer<Object>() {
                     @SuppressWarnings("unchecked")
                     @Override
-                    public void accept(Object o) {
+                    public void accept(Object o) throws Exception {
                         if (o != null) {
                             if (o instanceof ResponseParcel) {
                                 ResponseParcel responseParcel = (ResponseParcel) o;
                                 saveResponseParcel(responseParcel);
                             } else if (o instanceof FetchStatus) {
                                 final FetchStatus fetchStatus = (FetchStatus) o;
-                                if (observables == null || observables.isEmpty()) {
-                                    complete(fetchStatus);
+                                if (observables != null && !observables.isEmpty()) {
+                                    Observable.zip(observables, new Function<Object[], Object>() {
+                                        @Override
+                                        public Object apply(@NonNull Object[] objects) throws Exception {
+                                            return FetchStatus.fetched;
+                                        }
+                                    }).subscribe(new Consumer<Object>() {
+                                        @Override
+                                        public void accept(Object o) throws Exception {
+                                            complete(fetchStatus);
+                                        }
+                                    });
                                 } else {
-                                    fetchFinished = true;
+                                    complete(fetchStatus);
                                 }
+
                             }
                         }
                     }
@@ -219,15 +235,16 @@ public class SyncService extends Service {
     }
 
     private void saveResponseParcel(final ResponseParcel responseParcel) {
-        final ECSyncHelper ecSyncHelper = ECSyncHelper.getInstance(context);
+        Log.e(TAG, "saveResponseParcel: " );
+        final ECSyncUpdater ecUpdater = ECSyncUpdater.getInstance(context);
         final Observable<FetchStatus> observable = Observable.just(responseParcel)
                 .observeOn(AndroidSchedulers.from(mHandlerThread.getLooper()))
                 .subscribeOn(Schedulers.io()).
                         flatMap(new Function<ResponseParcel, ObservableSource<FetchStatus>>() {
                             @Override
-                            public ObservableSource<FetchStatus> apply(@NonNull ResponseParcel responseParcel) {
+                            public ObservableSource<FetchStatus> apply(@NonNull ResponseParcel responseParcel) throws Exception {
                                 JSONObject jsonObject = responseParcel.getJsonObject();
-                                ecSyncHelper.saveAllClientsAndEvents(jsonObject);
+                                ecUpdater.saveAllClientsAndEvents(jsonObject);
                                 return Observable.
                                         just(responseParcel.getServerVersionPair())
                                         .observeOn(AndroidSchedulers.from(mHandlerThread.getLooper()))
@@ -235,7 +252,9 @@ public class SyncService extends Service {
                                         .map(new Function<Pair<Long, Long>, FetchStatus>() {
                                             @Override
                                             public FetchStatus apply(@NonNull Pair<Long, Long> serverVersionPair) throws Exception {
-                                                BidanClientProcessor.getInstance(context).processClient(ecSyncHelper.allEvents(serverVersionPair.first - 1, serverVersionPair.second));
+                                                Log.e(TAG, "apply: proses data storage" );
+//                                                ClientProcessor.getInstance(context).processClient(ecUpdater.allEvents(serverVersionPair.first - 1, serverVersionPair.second));
+                                                BidanClientProcessor.getInstance(context).processClient(ecUpdater.allEvents(serverVersionPair.first - 1, serverVersionPair.second));
                                                 return FetchStatus.fetched;
                                             }
                                         });
@@ -245,31 +264,19 @@ public class SyncService extends Service {
 
         observable.subscribe(new Consumer<FetchStatus>() {
             @Override
-            public void accept(FetchStatus fetchStatus) {
-                // Remove observable from list
+            public void accept(FetchStatus fetchStatus) throws Exception {
+                sendSyncStatusBroadcastMessage(FetchStatus.fetched);
                 observables.remove(observable);
-                Log.i(getClass().getName(), "Deleted: one observable, new count:" + observables.size());
-
-                if ((observables == null || observables.isEmpty()) && fetchFinished) {
-                    complete(FetchStatus.fetched);
-                } else {
-                    sendSyncStatusBroadcastMessage(FetchStatus.fetched);
-
-                }
             }
         });
 
-        // Add observable to list
         observables.add(observable);
-
-        Long observableSize = observables == null ? 0L : observables.size();
-        Log.i(getClass().getName(), "Added: one observable, new count: " + observableSize);
 
         pullECFromServer();
 
     }
 
-    private JSONObject fetchRetry(String syncPropertyValue, int count) {
+    private JSONObject fetchRetry(String locations, int count) throws Exception {
         // Request spacing
         try {
             final int ONE_SECOND = 1000;
@@ -278,38 +285,87 @@ public class SyncService extends Service {
             Log.e(getClass().getName(), ie.getMessage());
         }
 
+        final ECSyncUpdater ecUpdater = ECSyncUpdater.getInstance(context);
+
         try {
-            return ECSyncHelper.getInstance(context).fetchAsJsonObject(SYNC_TYPE, syncPropertyValue);
+            return ecUpdater.fetchAsJsonObject(AllConstants.SyncFilters.FILTER_LOCATION_ID, locations);
 
         } catch (Exception e) {
-            Log.e(getClass().getName(), e.getMessage(), e);
+            Log.e(getClass().getName(), e.getMessage());
             if (count >= 2) {
-                //TODO Remove
-                stopSelf();
                 return null;
             } else {
                 int newCount = count + 1;
-                return fetchRetry(syncPropertyValue, newCount);
+                return fetchRetry(locations, newCount);
             }
 
         }
     }
 
     private void complete(FetchStatus fetchStatus) {
-        ECSyncHelper.getInstance(context).updateLastCheckTimeStamp(Calendar.getInstance().getTimeInMillis());
+        if (fetchStatus.equals(FetchStatus.nothingFetched)) {
+            ECSyncUpdater ecSyncUpdater = ECSyncUpdater.getInstance(context);
+            ecSyncUpdater.updateLastCheckTimeStamp(Calendar.getInstance().getTimeInMillis());
+        }
+
         sendSyncStatusBroadcastMessage(fetchStatus, true);
-        stopSelf();
+    }
+
+
+    private void sendSyncStatusBroadcastMessage(FetchStatus fetchStatus, boolean isComplete) {
+        Intent intent = new Intent();
+        intent.setAction(SyncStatusBroadcastReceiver.ACTION_SYNC_STATUS);
+        intent.putExtra(SyncStatusBroadcastReceiver.EXTRA_FETCH_STATUS, fetchStatus);
+        intent.putExtra(SyncStatusBroadcastReceiver.EXTRA_COMPLETE_STATUS, isComplete);
+        sendBroadcast(intent);
+
+        if (isComplete) {
+            stopSelf();
+        }
     }
 
     private void sendSyncStatusBroadcastMessage(FetchStatus fetchStatus) {
         sendSyncStatusBroadcastMessage(fetchStatus, false);
     }
 
-    private void sendSyncStatusBroadcastMessage(FetchStatus fetchStatus, boolean isComplete) {
-        EventBus.getDefault().post(new SyncEvent(fetchStatus));
-        if (isComplete)
-            stopSelf();
+    private void drishtiLogInfo(String message) {
+        org.smartregister.util.Log.logInfo(message);
     }
+
+    private Pair<Long, Long> getMinMaxServerVersions(JSONObject jsonObject) {
+        final String EVENTS = "events";
+        final String SERVER_VERSION = "serverVersion";
+        try {
+            if (jsonObject != null && jsonObject.has(EVENTS)) {
+                JSONArray events = jsonObject.getJSONArray(EVENTS);
+
+                long maxServerVersion = Long.MIN_VALUE;
+                long minServerVersion = Long.MAX_VALUE;
+
+                for (int i = 0; i < events.length(); i++) {
+                    Object o = events.get(i);
+                    if (o instanceof JSONObject) {
+                        JSONObject jo = (JSONObject) o;
+                        if (jo.has(SERVER_VERSION)) {
+                            long serverVersion = jo.getLong(SERVER_VERSION);
+                            if (serverVersion > maxServerVersion) {
+                                maxServerVersion = serverVersion;
+                            }
+
+                            if (serverVersion < minServerVersion) {
+                                minServerVersion = serverVersion;
+                            }
+                        }
+                    }
+                }
+                return Pair.create(minServerVersion, maxServerVersion);
+            }
+        } catch (Exception e) {
+            Log.e(getClass().getName(), e.getMessage());
+        }
+        return Pair.create(0L, 0L);
+    }
+
 
     // inner classes
     private final class ServiceHandler extends Handler {
@@ -331,6 +387,7 @@ public class SyncService extends Service {
         private ResponseParcel(JSONObject jsonObject, Pair<Long, Long> serverVersionPair) {
             this.jsonObject = jsonObject;
             this.serverVersionPair = serverVersionPair;
+            Log.e(TAG, "ResponseParcel: "+ jsonObject.toString() );
         }
 
         private JSONObject getJsonObject() {

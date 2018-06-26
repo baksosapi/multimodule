@@ -8,9 +8,8 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
-import org.smartregister.repository.AllSharedPreferences;
 import org.smartregister.bidan.R;
-import org.smartregister.bidan.application.BidanApplication;
+import org.smartregister.repository.AllSharedPreferences;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,7 +25,6 @@ public class SettingsActivity extends PreferenceActivity {
 
         getFragmentManager().beginTransaction().replace(android.R.id.content, new MyPreferenceFragment()).commit();
     }
-
 
     public static class MyPreferenceFragment extends PreferenceFragment {
         @Override
@@ -68,7 +66,7 @@ public class SettingsActivity extends PreferenceActivity {
 
                 logInfo("Saved URL: " + allSharedPreferences.fetchHost(""));
                 logInfo("Port: " + allSharedPreferences.fetchPort(0));
-                BidanApplication.getInstance().startPullConfigurableViewsIntentService(getActivity());
+
             } catch (MalformedURLException e) {
                 logError("Malformed Url: " + baseUrl);
             }
