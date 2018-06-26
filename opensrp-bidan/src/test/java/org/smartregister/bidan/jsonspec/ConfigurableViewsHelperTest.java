@@ -32,10 +32,10 @@ import java.util.Set;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
-import static org.smartregister.bidan.constant.BidanConstants.BidanConstants.REGISTER_COLUMNS.DIAGNOSE;
-import static org.smartregister.bidan.constant.BidanConstants.BidanConstants.REGISTER_COLUMNS.PATIENT;
-import static org.smartregister.bidan.constant.BidanConstants.BidanConstants.REGISTER_COLUMNS.RESULTS;
-import static org.smartregister.bidan.constant.BidanConstants.BidanConstants.REGISTER_COLUMNS.XPERT_RESULTS;
+import static org.smartregister.bidan.constant.BidanConstants.REGISTER_COLUMNS.DIAGNOSE;
+import static org.smartregister.bidan.constant.BidanConstants.REGISTER_COLUMNS.PATIENT;
+import static org.smartregister.bidan.constant.BidanConstants.REGISTER_COLUMNS.RESULTS;
+import static org.smartregister.bidan.constant.BidanConstants.REGISTER_COLUMNS.XPERT_RESULTS;
 
 /**
  * Created by samuelgithengi on 11/27/17.

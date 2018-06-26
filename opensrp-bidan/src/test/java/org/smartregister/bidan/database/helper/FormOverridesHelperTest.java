@@ -24,11 +24,11 @@ public class FormOverridesHelperTest {
 
         Map<String, String> patientDetails = new HashMap<>();
 
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PARTICIPANT_ID, "5345");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.FIRST_NAME, "William");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.LAST_NAME, "Tell");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PROGRAM_ID, "7730");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.TREATMENT_INITIATION_DATE, "2017-03-20");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PARTICIPANT_ID, "5345");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.FIRST_NAME, "William");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.LAST_NAME, "Tell");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PROGRAM_ID, "7730");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.TREATMENT_INITIATION_DATE, "2017-03-20");
 
         formOverridesHelper = new FormOverridesHelper(patientDetails);
     }
@@ -47,10 +47,10 @@ public class FormOverridesHelperTest {
         FormOverridesHelper formOverridesHelper = new FormOverridesHelper(null);
         Map<String, String> patientDetails = new HashMap<>();
 
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PARTICIPANT_ID, "1099");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.FIRST_NAME, "Speedy");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.LAST_NAME, "Gonzalez");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PROGRAM_ID, "77555");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PARTICIPANT_ID, "1099");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.FIRST_NAME, "Speedy");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.LAST_NAME, "Gonzalez");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PROGRAM_ID, "77555");
 
         formOverridesHelper.setPatientDetails(patientDetails);
         Assert.assertNotNull("{\"fieldOverrides\":\"{\\\"program_id\\\":\\\"77555\\\",\\\"last_name\\\":\\\"Gonzalez\\\",\\\"first_name\\\":\\\"Speedy\\\"}\"}", formOverridesHelper.getFieldOverrides().getJSONString());
@@ -85,14 +85,14 @@ public class FormOverridesHelperTest {
         FormOverridesHelper formOverridesHelper = new FormOverridesHelper(null);
         Map<String, String> patientDetails = new HashMap<>();
 
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PARTICIPANT_ID, "5345");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.FIRST_NAME, "William");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.LAST_NAME, "Tell");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PROGRAM_ID, "7730");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PARTICIPANT_ID, "5345");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.FIRST_NAME, "William");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.LAST_NAME, "Tell");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PROGRAM_ID, "7730");
 
         long twentyOneYearsAgo = System.currentTimeMillis() - (((21L * 365L) + 3L) * 24L * 60L * 60L * 1000L);
 
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.DOB, getDate(twentyOneYearsAgo));
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.DOB, getDate(twentyOneYearsAgo));
 
         formOverridesHelper.setPatientDetails(patientDetails);
 
@@ -107,11 +107,11 @@ public class FormOverridesHelperTest {
         FormOverridesHelper formOverridesHelper = new FormOverridesHelper(null);
         Map<String, String> patientDetails = new HashMap<>();
 
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PARTICIPANT_ID, "5345");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.FIRST_NAME, "William");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.LAST_NAME, "Tell");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.PROGRAM_ID, "7730");
-        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.BidanConstants.KEY.DOB, "alpha");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PARTICIPANT_ID, "5345");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.FIRST_NAME, "William");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.LAST_NAME, "Tell");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.PROGRAM_ID, "7730");
+        patientDetails.put(org.smartregister.bidan.constant.BidanConstants.KEY.DOB, "alpha");
 
         formOverridesHelper.setPatientDetails(patientDetails);
 
