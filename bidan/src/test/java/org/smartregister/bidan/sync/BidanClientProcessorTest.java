@@ -2,6 +2,7 @@ package org.smartregister.bidan.sync;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import junit.framework.Assert;
 
@@ -30,7 +31,7 @@ import java.util.ArrayList;
  * Created by sid-tech on 4/26/18
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({AssetHandler.class, PreferenceManager.class})
+@PrepareForTest({AssetHandler.class, PreferenceManager.class, Log.class})
 @PowerMockIgnore({"javax.xml.*", "org.xml.sax.*", "org.w3c.dom.*", "org.springframework.context.*", "org.apache.log4j.*"})
 public class BidanClientProcessorTest {
 
@@ -53,6 +54,7 @@ public class BidanClientProcessorTest {
 
     @Before
     public void setUp() throws Exception {
+        PowerMockito.mockStatic(Log.class);
         MockitoAnnotations.initMocks(this);
         CoreLibrary.init(context);
         Mockito.when(context.detailsRepository()).thenReturn(detailsRepository);
