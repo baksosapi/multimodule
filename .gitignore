@@ -90,3 +90,5 @@ lib/bpm
 lib/
 .idea/*.xml
 *.exec
+.directory
+opensr-bidan/
