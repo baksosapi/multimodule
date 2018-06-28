@@ -1,6 +1,6 @@
 rootProject.name = 'multimodule'
 include ':opensrp-bidan2'
-include ':opensrp-bidan'
+//include ':opensrp-bidan'
 //include ':opensrp-gizi'
 //include ':opensrp-vaksinator'
 include ':bidan'
